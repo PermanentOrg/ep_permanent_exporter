@@ -1,0 +1,8 @@
+{
+  "name": "ep_permanent_archive",
+  "version": "0.0.1",
+  "description": "Etherpad Lite plugin to archive pads to Permanent.org",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  }
+}
