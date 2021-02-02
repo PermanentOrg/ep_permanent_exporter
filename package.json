@@ -1,7 +1,7 @@
 {
-  "name": "ep_permanent_archive",
+  "name": "ep_permanent_exporter",
   "version": "0.0.1",
-  "description": "Etherpad Lite plugin to archive pads to Permanent.org",
+  "description": "Etherpad Lite plugin to export pads to Permanent.org",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   }
