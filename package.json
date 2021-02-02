@@ -2,6 +2,7 @@
   "name": "ep_permanent_exporter",
   "version": "0.0.1",
   "description": "Etherpad Lite plugin to export pads to Permanent.org",
+  "license": "GPL-3.0",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   }
