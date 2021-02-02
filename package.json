@@ -3,6 +3,18 @@
   "version": "0.0.1",
   "description": "Etherpad Lite plugin to export pads to Permanent.org",
   "license": "GPL-3.0",
+  "author": {
+    "name": "Permanent.org",
+    "email": "engineers@permanent.org",
+    "url": "https://www.permanent.org/"
+  },
+  "contributors": [
+    {
+      "name": "Jason Owen",
+      "email": "jasonaowen@opentechstrategies.com",
+      "url": "https://jasonaowen.net"
+    }
+  ],
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   }
