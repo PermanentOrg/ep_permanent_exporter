@@ -114,3 +114,7 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+
+# Etherpad keeps some state in its node_modules directory, which is the repo
+# when the plugin is installed directly
+.ep_initialized

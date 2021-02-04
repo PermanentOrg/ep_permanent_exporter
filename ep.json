@@ -1,0 +1,10 @@
+{
+  "parts": [{
+    "name": "ep_permanent_exporter",
+    "hooks": {
+      "eejsBlock_exportColumn": "ep_permanent_exporter/dist/server/export-column"
+    },
+    "client_hooks": {
+    }
+  }]
+}
