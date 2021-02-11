@@ -3,7 +3,8 @@
     "name": "ep_permanent_exporter",
     "hooks": {
       "eejsBlock_exportColumn": "ep_permanent_exporter/dist/server/export-column",
-      "loadSettings": "ep_permanent_exporter/dist/server/load-settings"
+      "loadSettings": "ep_permanent_exporter/dist/server/load-settings",
+      "padUpdate": "ep_permanent_exporter/dist/server/pad-update"
     },
     "client_hooks": {
     }
