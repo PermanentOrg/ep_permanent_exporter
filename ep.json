@@ -3,6 +3,7 @@
     "name": "ep_permanent_exporter",
     "hooks": {
       "eejsBlock_exportColumn": "ep_permanent_exporter/dist/server/export-column",
+      "expressCreateServer": "ep_permanent_exporter/dist/server/express-create-server",
       "loadSettings": "ep_permanent_exporter/dist/server/load-settings",
       "padUpdate": "ep_permanent_exporter/dist/server/pad-update"
     },
