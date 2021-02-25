@@ -7,16 +7,23 @@ import type {
   Response,
 } from 'express';
 import bodyParser from 'body-parser';
+import { get, set } from 'ep_etherpad-lite/node/db/DB';
 
 const getPadPermanentConfig: Handler = async (
   req: Request,
   res: Response,
 ): Promise<void> => {
   console.log('get permanent config for pad id', req.params.pad);
-  // put database lookup here
-  res.json({
-    sync: false,
-  });
+  try {
+    const value = await get(`permanent:${req.params.pad}`);
+    res.json({
+      value,
+    });
+  } catch (err: unknown) {
+    res.json({
+      err,
+    });
+  }
 };
 
 const setPadPermanentConfig: Handler = async (
@@ -25,7 +32,7 @@ const setPadPermanentConfig: Handler = async (
 ): Promise<void> => {
   console.log('post permanent config for pad id', req.params.pad);
   console.log('body:', req.body);
-  // put database store here
+  set(`permanent:${req.params.pad}`, req.body);
   res.json({
     saved: true,
   });
