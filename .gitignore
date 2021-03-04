@@ -118,3 +118,6 @@ dist
 # Etherpad keeps some state in its node_modules directory, which is the repo
 # when the plugin is installed directly
 .ep_initialized
+
+# Etherpad requires JavaScript used by browsers to live in the static directory
+static/js/
