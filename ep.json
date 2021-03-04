@@ -8,6 +8,7 @@
       "padUpdate": "ep_permanent_exporter/static/js/server/pad-update"
     },
     "client_hooks": {
+      "documentReady": "ep_permanent_exporter/static/js/client/document-ready"
     }
   }]
 }
