@@ -2,6 +2,7 @@ import * as EtherpadSettings from 'ep_etherpad-lite/node/utils/Settings';
 
 interface PermanentExporterSettings {
   waitMilliseconds: number;
+  wallet: string;
 }
 
 if (!('ep_permanent_exporter' in EtherpadSettings)) {
