@@ -2,3 +2,13 @@
   border: 3px solid;
   border-color: red;
 }
+
+#ep_permanent_exporter label {
+  display: block;
+}
+
+#ep_permanent_exporter input[type="checkbox"] {
+  opacity: 1;
+  pointer-events: auto;
+  position: static;
+}

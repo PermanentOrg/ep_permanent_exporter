@@ -2,6 +2,10 @@
   "extends": "@tsconfig/node10/tsconfig.json",
 
   "compilerOptions": {
+    "lib": [
+      "DOM",
+      "es2018"
+    ],
     "outDir": "static/js",
     "sourceMap": true
   }
