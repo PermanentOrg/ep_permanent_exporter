@@ -23,6 +23,12 @@
   "engines": {
     "node": ">=10"
   },
+  "files": [
+    "ep.json",
+    "README.md",
+    "static/",
+    "templates/"
+  ],
   "devDependencies": {
     "@tsconfig/node10": "^1.0.7",
     "@types/express": "^4.17.11",
