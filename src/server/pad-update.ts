@@ -12,9 +12,9 @@ interface Pad {
 }
 
 const debounceUpdate = pluginSettings.then((settings) => debounce((pad: Pad) => {
-  console.log('Debouncing on update', pad.head, 'for pad id', pad.id, 'after', settings.wait_ms, 'ms');
+  console.log('Debouncing on update', pad.head, 'for pad id', pad.id, 'after', settings.waitMilliseconds, 'ms');
   console.log(pad.atext.text);
-}, settings.wait_ms));
+}, settings.waitMilliseconds));
 
 const padUpdate = (hookName: string, args: { pad: Pad }) => {
   const { pad } = args;

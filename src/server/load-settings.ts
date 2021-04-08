@@ -2,7 +2,7 @@
 let loadSettings;
 
 interface PermanentExporterSettings {
-  wait_ms: number;
+  waitMilliseconds: number;
 }
 
 const pluginSettings: Promise<PermanentExporterSettings> = new Promise((resolve, reject) => {
