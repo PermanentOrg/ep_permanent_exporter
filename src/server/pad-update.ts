@@ -1,7 +1,7 @@
 /* eslint-disable no-console -- console logging is a useful initial prototype */
 
 import { debounce } from 'lodash';
-import { pluginSettings } from './load-settings';
+import { pluginSettings } from './settings';
 
 interface Pad {
   atext: {
@@ -11,15 +11,15 @@ interface Pad {
   id: string,
 }
 
-const debounceUpdate = pluginSettings.then((settings) => debounce((pad: Pad) => {
-  console.log('Debouncing on update', pad.head, 'for pad id', pad.id, 'after', settings.waitMilliseconds, 'ms');
+const debounceUpdate = debounce((pad: Pad) => {
+  console.log('Debouncing on update', pad.head, 'for pad id', pad.id, 'after', pluginSettings.waitMilliseconds, 'ms');
   console.log(pad.atext.text);
-}, settings.waitMilliseconds));
+}, pluginSettings.waitMilliseconds);
 
 const padUpdate = (hookName: string, args: { pad: Pad }) => {
   const { pad } = args;
   console.log('Received update', pad.head, 'for pad id', pad.id);
-  debounceUpdate.then((f) => f(pad));
+  debounceUpdate(pad);
 };
 
 export { padUpdate };
