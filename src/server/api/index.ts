@@ -6,6 +6,7 @@ import type {
   Response,
 } from 'express';
 import bodyParser from 'body-parser';
+import cookieParser from 'cookie-parser';
 import express from 'express';
 import { get, set } from 'ep_etherpad-lite/node/db/DB';
 
@@ -39,6 +40,9 @@ const setPadPermanentConfig: Handler = async (
 };
 
 const router = express.Router({ mergeParams: true });
+router.use([
+  cookieParser(),
+]);
 router.get('/', getPadPermanentConfig);
 router.put('/', bodyParser.json());
 router.put('/', setPadPermanentConfig);
