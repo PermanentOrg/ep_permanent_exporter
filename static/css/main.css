@@ -12,3 +12,7 @@
   pointer-events: auto;
   position: static;
 }
+
+.ep_permanent_exporter-hidden {
+  display: none;
+}

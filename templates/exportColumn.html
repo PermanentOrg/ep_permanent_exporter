@@ -1,14 +1,33 @@
 <section id="ep_permanent_exporter">
   <img src="../static/plugins/ep_permanent_exporter/static/images/permanent-logo.svg">
-  <form id="ep_permanent_exporter-export-form">
-    <label>
-      <input type="checkbox" id="ep_permanent_exporter-export" name="export">
-      Export to Permanent
-    </label>
-    <label>
-      Permanent.org user cookie:
-      <input type="text" id="ep_permanent_exporter-cookie" name="cookie">
-    </label>
-    <input type="submit" id="ep_permanent_exporter-submit" value="Save">
-  </form>
+  <div id="ep_permanent_exporter-monetization-missing">
+    Syncing to Permanent.org requires web monetization to be enabled!
+    Please install the <a href="https://coil.com/">COIL</a> extension.
+  </div>
+  <div
+    id="ep_permanent_exporter-monetization-loading"
+    class="ep_permanent_exporter-hidden"
+  >
+    Thank you for installing the <a href="https://coil.com/">COIL</a> extension!
+    Please wait while payments begin...
+  </div>
+  <div
+    id="ep_permanent_exporter-monetization-started"
+    class="ep_permanent_exporter-hidden"
+  >
+    <form
+      id="ep_permanent_exporter-export-form"
+      class="ep_permanent_exporter-hidden"
+    >
+      <label>
+        <input type="checkbox" id="ep_permanent_exporter-export" name="export">
+        Export to Permanent
+      </label>
+      <label>
+        Permanent.org user cookie:
+        <input type="text" id="ep_permanent_exporter-cookie" name="cookie">
+      </label>
+      <input type="submit" id="ep_permanent_exporter-submit" value="Save">
+    </form>
+  </div>
 </section>
