@@ -5,27 +5,28 @@ const padUrl = () => (
   window.location.href.replace(window.location.search, '')
 );
 
-const monetizationPending = () => {
-  $('#ep_permanent_exporter-monetization-missing').hide();
-  $('#ep_permanent_exporter-monetization-loading').show();
-  $('#ep_permanent_exporter-monetization-started').hide();
-};
+const monetizationElements = [
+  '#ep_permanent_exporter-monetization-missing',
+  '#ep_permanent_exporter-monetization-loading',
+  '#ep_permanent_exporter-monetization-started',
+];
 
-const monetizationStart = () => {
-  $('#ep_permanent_exporter-monetization-missing').hide();
-  $('#ep_permanent_exporter-monetization-loading').hide();
-  $('#ep_permanent_exporter-monetization-started').show();
+const showOneOfGroup = (group: string[], pattern: string) => {
+  group.forEach((element) => $(element).toggle(element.endsWith(pattern)));
 };
 
 const initializeMonetization = () => {
   if (!document.monetization) {
     return;
   }
-  monetizationPending();
+
+  showOneOfGroup(monetizationElements, 'loading');
+
+  document.monetization.addEventListener('monetizationstart', () => (
+    showOneOfGroup(monetizationElements, 'started')
+  ));
   if (document.monetization.state === 'started') {
-    monetizationStart();
-  } else {
-    document.monetization.addEventListener('monetizationstart', monetizationStart);
+    showOneOfGroup(monetizationElements, 'started');
   }
 };
 
