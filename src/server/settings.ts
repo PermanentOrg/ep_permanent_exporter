@@ -1,6 +1,7 @@
 import * as EtherpadSettings from 'ep_etherpad-lite/node/utils/Settings';
 
 interface PermanentExporterSettings {
+  loginUrl: string;
   waitMilliseconds: number;
   wallet: string;
 }

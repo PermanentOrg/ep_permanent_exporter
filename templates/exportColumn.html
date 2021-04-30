@@ -15,19 +15,33 @@
     id="ep_permanent_exporter-monetization-started"
     class="ep_permanent_exporter-hidden"
   >
-    <form
-      id="ep_permanent_exporter-export-form"
+    <div id="ep_permanent_exporter-log-in">
+      Please <a href="<%- loginUrl %>">log in</a> to your Permanent account!
+    </div>
+    <div
+      id="ep_permanent_exporter-sync-disabled"
       class="ep_permanent_exporter-hidden"
     >
-      <label>
-        <input type="checkbox" id="ep_permanent_exporter-export" name="export">
-        Export to Permanent
-      </label>
-      <label>
-        Permanent.org user cookie:
-        <input type="text" id="ep_permanent_exporter-cookie" name="cookie">
-      </label>
-      <input type="submit" id="ep_permanent_exporter-submit" value="Save">
-    </form>
+      Automatic sync to Permanent archive is not currently enabled.
+      <form id="ep_permanent_exporter-export-form-enable">
+        <input type="submit" value="Enable">
+      </form>
+    </div>
+    <div
+      id="ep_permanent_exporter-sync-pending"
+      class="ep_permanent_exporter-hidden"
+    >
+      Enabling automatic sync to Permanent archive;
+      please wait while we validate your credentials.
+    </div>
+    <div
+      id="ep_permanent_exporter-sync-enabled"
+      class="ep_permanent_exporter-hidden"
+    >
+      Automatic sync to Permanent archive enabled!
+      <form id="ep_permanent_exporter-export-form-disable">
+        <input type="submit" value="Disable">
+      </form>
+    </div>
   </div>
 </section>

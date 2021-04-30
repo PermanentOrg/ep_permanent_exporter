@@ -30,6 +30,25 @@ const initializeMonetization = () => {
   }
 };
 
+const syncElements = [
+  '#ep_permanent_exporter-log-in',
+  '#ep_permanent_exporter-sync-disabled',
+  '#ep_permanent_exporter-sync-pending',
+  '#ep_permanent_exporter-sync-enabled',
+];
+
+const initializePermanent = async () => {
+  const { loggedInToPermanent, sync } = await $.getJSON(`${padUrl()}/permanent`);
+
+  if (loggedInToPermanent && sync === false) {
+    showOneOfGroup(syncElements, 'sync-disabled');
+  } else if (loggedInToPermanent && sync === 'pending') {
+    showOneOfGroup(syncElements, 'sync-pending');
+  } else if (sync === true) {
+    showOneOfGroup(syncElements, 'sync-enabled');
+  }
+};
+
 const documentReady = (hookName: string) => {
   // eslint-disable-next-line no-console
   console.log('ep_permanent_exporter hook called:', hookName);
@@ -38,25 +57,7 @@ const documentReady = (hookName: string) => {
   }
   initializeMonetization();
 
-  $('#ep_permanent_exporter-export-form').submit((event: JQuery.SubmitEvent) => {
-    event.preventDefault();
-
-    // eslint-disable-next-line no-console
-    console.log('ep_permanent_exporter form submitted:', event);
-
-    $.ajax({
-      method: 'PUT',
-      url: `${padUrl()}/permanent`,
-      contentType: 'application/json',
-      data: JSON.stringify({
-        export: $('#ep_permanent_exporter-export').is(':checked'),
-        cookie: $('#ep_permanent_exporter-cookie').val(),
-      }),
-      dataType: 'json',
-      // eslint-disable-next-line no-console
-      complete: (jqXHR, textStatus) => console.log('ajax complete', jqXHR, textStatus),
-    });
-  });
+  initializePermanent();
 };
 
 export { documentReady };

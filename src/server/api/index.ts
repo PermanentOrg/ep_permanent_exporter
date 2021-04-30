@@ -8,7 +8,14 @@ import type {
 import bodyParser from 'body-parser';
 import cookieParser from 'cookie-parser';
 import express from 'express';
-import { get, set } from 'ep_etherpad-lite/node/db/DB';
+import { getAuthor4Token } from 'ep_etherpad-lite/node/db/AuthorManager';
+import { getSyncConfig, setSyncConfig } from '../database';
+
+const hasValidLookingCookies = (req: Request): boolean => (
+  'cookies' in req
+  && 'permMFA' in req.cookies
+  && 'permSession' in req.cookies
+);
 
 const getPadPermanentConfig: Handler = async (
   req: Request,
@@ -16,9 +23,11 @@ const getPadPermanentConfig: Handler = async (
 ): Promise<void> => {
   console.log('get permanent config for pad id', req.params.pad);
   try {
-    const value = await get(`permanent:${req.params.pad}`);
+    const author = await getAuthor4Token(req.cookies.token);
+    const { credentials, sync } = await getSyncConfig(req.params.pad, author);
     res.json({
-      value,
+      loggedInToPermanent: hasValidLookingCookies(req) && credentials !== 'invalid',
+      sync,
     });
   } catch (err: unknown) {
     res.json({
@@ -33,7 +42,6 @@ const setPadPermanentConfig: Handler = async (
 ): Promise<void> => {
   console.log('post permanent config for pad id', req.params.pad);
   console.log('body:', req.body);
-  set(`permanent:${req.params.pad}`, req.body);
   res.json({
     saved: true,
   });
