@@ -1,14 +1,14 @@
 /* eslint-disable no-console -- console logging is a useful initial prototype */
 
+import bodyParser from 'body-parser';
+import cookieParser from 'cookie-parser';
+import express from 'express';
+import { getAuthor4Token } from 'ep_etherpad-lite/node/db/AuthorManager';
 import type {
   Handler,
   Request,
   Response,
 } from 'express';
-import bodyParser from 'body-parser';
-import cookieParser from 'cookie-parser';
-import express from 'express';
-import { getAuthor4Token } from 'ep_etherpad-lite/node/db/AuthorManager';
 import { getSyncConfig, setSyncConfig } from '../database';
 
 const hasValidLookingCookies = (req: Request): boolean => (
