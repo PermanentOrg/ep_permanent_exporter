@@ -37,15 +37,18 @@ const syncElements = [
   '#ep_permanent_exporter-sync-enabled',
 ];
 
-const initializePermanent = async () => {
+const checkPermanentSyncStatus = async () => {
   const { loggedInToPermanent, sync } = await $.getJSON(`${padUrl()}/permanent`);
 
-  if (loggedInToPermanent && sync === false) {
-    showOneOfGroup(syncElements, 'sync-disabled');
+  if (sync === true) {
+    showOneOfGroup(syncElements, 'sync-enabled');
   } else if (loggedInToPermanent && sync === 'pending') {
     showOneOfGroup(syncElements, 'sync-pending');
-  } else if (sync === true) {
-    showOneOfGroup(syncElements, 'sync-enabled');
+    setTimeout(checkPermanentSyncStatus, 1000);
+  } else if (loggedInToPermanent) {
+    showOneOfGroup(syncElements, 'sync-disabled');
+  } else {
+    showOneOfGroup(syncElements, 'log-in');
   }
 };
 
@@ -57,7 +60,33 @@ const documentReady = (hookName: string) => {
   }
   initializeMonetization();
 
-  initializePermanent();
+  checkPermanentSyncStatus();
+
+  $('#ep_permanent_exporter-export-form-enable').submit((event: JQuery.SubmitEvent) => {
+    event.preventDefault();
+    showOneOfGroup(syncElements, 'sync-pending');
+
+    $.ajax({
+      method: 'POST',
+      url: `${padUrl()}/permanent`,
+      dataType: 'json',
+      complete: () => {
+        // it will take some amount of time for the sync to be established,
+        // so start polling
+        setTimeout(checkPermanentSyncStatus, 1000);
+      },
+    });
+  });
+  $('#ep_permanent_exporter-export-form-disable').submit((event: JQuery.SubmitEvent) => {
+    event.preventDefault();
+    showOneOfGroup(syncElements, 'sync-disabled');
+
+    $.ajax({
+      method: 'DELETE',
+      url: `${padUrl()}/permanent`,
+      dataType: 'json',
+    });
+  });
 };
 
 export { documentReady };

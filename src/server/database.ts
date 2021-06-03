@@ -1,12 +1,20 @@
-import { get, set } from 'ep_etherpad-lite/node/db/DB';
+import { get, set, remove } from 'ep_etherpad-lite/node/db/DB';
 
 interface SyncConfigDisabled {
   sync: false;
-  credentials?: 'invalid';
 }
 
 interface SyncConfigPending {
   sync: 'pending';
+  credentials: {
+    type: 'cookies';
+    session: string;
+    mfa: string;
+  };
+}
+
+interface SyncConfigInvalid {
+  sync: 'invalid';
   credentials: {
     type: 'cookies';
     session: string;
@@ -30,7 +38,8 @@ interface SyncConfigEnabled {
   };
 }
 
-export type SyncConfig = SyncConfigDisabled | SyncConfigPending | SyncConfigEnabled;
+export type SyncConfig = SyncConfigDisabled | SyncConfigPending
+  | SyncConfigInvalid | SyncConfigEnabled;
 
 const getSyncConfig = async (
   padId: string,
@@ -51,4 +60,11 @@ const setSyncConfig = async (
   set(`permanent:${padId}:${authorId}`, config)
 );
 
-export { getSyncConfig, setSyncConfig };
+const deleteSyncConfig = async (
+  padId: string,
+  authorId: string,
+): Promise<SyncConfig> => (
+  remove(`permanent:${padId}:${authorId}`)
+);
+
+export { getSyncConfig, setSyncConfig, deleteSyncConfig };
