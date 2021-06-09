@@ -109,7 +109,7 @@ const disableSync: Handler = async (
   try {
     const author = await getAuthor4Token(req.cookies.token);
     const config = await getSyncConfig(req.params.pad, author);
-    setSyncConfig(req.params.pad, author, { sync: false });
+    deleteSyncConfig(req.params.pad, author);
     res.status(202).json({
       loggedInToPermanent: hasSessionCookies(req) && !isInvalidSession(req, config),
       sync: config.sync,
