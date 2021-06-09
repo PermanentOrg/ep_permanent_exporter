@@ -1,4 +1,9 @@
-import { get, set, remove } from 'ep_etherpad-lite/node/db/DB';
+import {
+  findKeys,
+  get,
+  remove,
+  set,
+} from 'ep_etherpad-lite/node/db/DB';
 
 interface SyncConfigDisabled {
   sync: false;
@@ -22,7 +27,7 @@ interface SyncConfigInvalid {
   };
 }
 
-interface SyncConfigEnabled {
+export interface SyncConfigEnabled {
   sync: true;
   credentials: {
     type: 'cookies';
@@ -52,6 +57,11 @@ const getSyncConfig = async (
   return value as SyncConfig;
 };
 
+const getSyncConfigs = async (padId: string): Promise<SyncConfig[]> => {
+  const keys = await findKeys(`permanent:${padId}:*`, null) as string[];
+  return Promise.all(keys.map((key) => get(key)));
+};
+
 const setSyncConfig = async (
   padId: string,
   authorId: string,
@@ -67,4 +77,9 @@ const deleteSyncConfig = async (
   remove(`permanent:${padId}:${authorId}`)
 );
 
-export { getSyncConfig, setSyncConfig, deleteSyncConfig };
+export {
+  deleteSyncConfig,
+  getSyncConfig,
+  getSyncConfigs,
+  setSyncConfig,
+};

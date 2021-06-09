@@ -9,6 +9,7 @@ import {
   getSyncConfig,
   setSyncConfig,
 } from '../database';
+import { getSyncTarget } from '../permanent-client';
 import type {
   Handler,
   Request,
@@ -92,8 +93,27 @@ const enableSync: Handler = async (
     });
 
     setImmediate(() => {
-      // TODO: validate credentials, get/create Etherpad folder, save target in db
-      deleteSyncConfig(req.params.pad, author);
+      getSyncTarget(permSession, permMFA)
+        .then((target) => setSyncConfig(req.params.pad, author, {
+          sync: true,
+          credentials: {
+            type: 'cookies',
+            session: permSession,
+            mfa: permMFA,
+          },
+          target,
+        }))
+        .catch((error: unknown) => {
+          console.log('Error trying to find/create Etherpad folder', typeof error, error);
+          setSyncConfig(req.params.pad, author, {
+            sync: 'invalid',
+            credentials: {
+              type: 'cookies',
+              session: permSession,
+              mfa: permMFA,
+            },
+          });
+        });
     });
   } catch (err: unknown) {
     res.json({

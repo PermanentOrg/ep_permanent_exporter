@@ -2,6 +2,9 @@
 
 import { debounce } from 'lodash';
 import { pluginSettings } from './settings';
+import { getSyncConfigs } from './database';
+import { uploadText } from './permanent-client';
+import type { SyncConfigEnabled } from './database';
 
 interface Pad {
   atext: {
@@ -11,14 +14,25 @@ interface Pad {
   id: string,
 }
 
-const debounceUpdate = debounce((pad: Pad) => {
+const debounceUpdate = debounce(async (pad: Pad): Promise<void> => {
   console.log('Debouncing on update', pad.head, 'for pad id', pad.id, 'after', pluginSettings.waitMilliseconds, 'ms');
-  console.log(pad.atext.text);
+
+  (await getSyncConfigs(pad.id))
+    .filter((config): config is SyncConfigEnabled => config.sync === true)
+    .forEach(({ credentials, target }) => uploadText(
+      credentials.session,
+      credentials.mfa,
+      target,
+      `${pad.id}.r${pad.head}.txt`,
+      `${pad.id}.r${pad.head}.txt`,
+      `Text of ${pad.id} at revision ${pad.head}`,
+      pad.atext.text,
+    ));
+  // TODO: error handling to set invalid credentials on failure
 }, pluginSettings.waitMilliseconds);
 
 const padUpdate = (hookName: string, args: { pad: Pad }) => {
   const { pad } = args;
-  console.log('Received update', pad.head, 'for pad id', pad.id);
   debounceUpdate(pad);
 };
 
