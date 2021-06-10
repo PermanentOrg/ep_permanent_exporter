@@ -1,8 +1,3 @@
-#ep_permanent_exporter {
-  border: 3px solid;
-  border-color: red;
-}
-
 #ep_permanent_exporter label {
   display: block;
 }
