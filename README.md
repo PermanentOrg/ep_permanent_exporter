@@ -3,6 +3,11 @@
 An [Etherpad Lite](https://etherpad.org/) plugin to allow saving pads
 to [Permanent.org](https://www.permanent.org/).
 
+We [announced the prototype](https://www.permanent.org/blog/permanents-etherpad-prototype-is-ready/)
+of this plugin earlier this year, which includes a sign-up link if you
+would like to help test it!
+
+
 ## Installation
 
 This package is not yet being published. Instead, you will need to build &
