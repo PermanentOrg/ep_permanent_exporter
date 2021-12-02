@@ -1,7 +1,6 @@
 import * as EtherpadSettings from 'ep_etherpad-lite/node/utils/Settings';
 
 interface PermanentExporterSettings {
-  apiKey: string;
   baseUrl: string;
   padToken: string;
   loginUrl: string;

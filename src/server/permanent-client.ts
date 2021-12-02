@@ -4,7 +4,7 @@ import FormData from 'form-data';
 
 import { pluginSettings } from './settings';
 
-const { apiKey, baseUrl, padToken } = pluginSettings;
+const { baseUrl, padToken } = pluginSettings;
 
 const createClient = async (
   sessionToken: string,
@@ -13,7 +13,6 @@ const createClient = async (
   archiveNbr?: string,
 ): Promise<Permanent> => {
   const permanent = new Permanent({
-    apiKey,
     baseUrl,
     mfaToken,
     sessionToken,
