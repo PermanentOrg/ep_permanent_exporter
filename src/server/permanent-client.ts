@@ -41,11 +41,8 @@ const getSyncTarget = async (
   accessToken: string,
 ): Promise<PermanentUploadTarget> => {
   const permanent = client.loadToken(accessToken);
-  console.log('we have a permanent');
   await permanent.init();
-  console.log('permanent initialized');
   const etherpadFolder = await getOrCreateEtherpadFolder(permanent);
-  console.log('folder is' + etherpadFolder);
   return {
     archiveId: permanent.getArchiveId() as number,
     archiveNbr: permanent.getArchiveNbr() as string,

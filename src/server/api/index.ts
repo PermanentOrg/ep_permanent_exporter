@@ -28,7 +28,6 @@ const getPadPermanentConfig: Handler = async (
   req: Request,
   res: Response,
 ): Promise<void> => {
-  console.log('get permanent config for pad id', req.params.pad);
   try {
     const author = await getAuthor4Token(req.cookies.token);
     const config = await getSyncConfig(req.params.pad, author);
@@ -49,7 +48,6 @@ const enableSync: Handler = async (
 ): Promise<void> => {
   try {
     const author = await getAuthor4Token(req.cookies.token);
-    console.log('author is ' + author);
     const config = await getSyncConfig(req.params.pad, author);
 
     if (!hasTokenCookie(req)) {
@@ -86,8 +84,6 @@ const enableSync: Handler = async (
     });
 
     setImmediate(() => {
-      console.log(req.signedCookies);
-      console.log('token? ' + accessToken);
       getSyncTarget(accessToken)
         .then((target) => setSyncConfig(req.params.pad, author, {
           sync: true,
@@ -134,8 +130,6 @@ const redirectIdP: Handler = async (
   req: Request,
   res: Response,
 ): Promise<void> => {
-  console.log('Redirecting Permanent login request');
-  console.log(req);
   res.redirect(client.authorizeUrl(
     `${req.protocol}://${req.get('host')}/permanent/callback`,
     'offline',
@@ -154,8 +148,6 @@ const completeOauth: Handler = async (
     'offline',
     state as string,
   );
-
-  console.log(permanent.getAccessToken());
 
   // TODO: set cookie expiration time to match token expiration time
   res.cookie('permanentToken', JSON.stringify(permanent.getAccessToken()), {
