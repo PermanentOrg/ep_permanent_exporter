@@ -5,7 +5,7 @@ const expressCreateServer = (
   hookName: string,
   context: { app: Application },
 ) => {
-  context.app.use('/p/:pad/permanent', router);
+  context.app.use(router);
 };
 
 export { expressCreateServer };

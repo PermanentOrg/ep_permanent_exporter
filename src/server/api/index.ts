@@ -145,8 +145,8 @@ const router = express.Router({ mergeParams: true });
 router.use([
   cookieParser(),
 ]);
-router.get('/', getPadPermanentConfig);
-router.post('/', enableSync);
-router.delete('/', disableSync);
+router.get('/p/:pad/permanent', getPadPermanentConfig);
+router.post('/p/:pad/permanent', enableSync);
+router.delete('/p/:pad/permanent', disableSync);
 
 export { router };
