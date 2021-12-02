@@ -93,23 +93,15 @@ const enableSync: Handler = async (
           sync: true,
           credentials: {
             type: 'token',
-            token: accessToken,
+            token: JSON.stringify(accessToken),
           },
           target,
         }))
         .catch((error: unknown) => {
           console.log('Error trying to find/create Etherpad folder', typeof error, error);
           console.log((error as object).toString());
-          /* TODO: delete token cookie and delete sync config if any
-          setSyncConfig(req.params.pad, author, {
-            sync: 'invalid',
-            credentials: {
-              type: 'cookies',
-              session: permSession,
-              mfa: permMFA,
-            },
-          });
-          */
+          deleteSyncConfig(req.params.pad, author);
+          // TODO: delete token cookie
         });
     });
   } catch (err: unknown) {

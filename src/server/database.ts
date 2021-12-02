@@ -13,7 +13,7 @@ interface SyncConfigPending {
   sync: 'pending';
   credentials: {
     type: 'token';
-    token: object;
+    token: string; // serialized JSON
   };
 }
 
@@ -21,7 +21,7 @@ export interface SyncConfigEnabled {
   sync: true;
   credentials: {
     type: 'token';
-    token: object;
+    token: string; // serialized JSON
   };
   target: {
     archiveId: number;

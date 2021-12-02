@@ -13,23 +13,6 @@ const client = new PermanentOAuthClient(
   authHost,
 );
 
-const createClient = async (
-  sessionToken: string,
-  mfaToken: string,
-  archiveId?: number,
-  archiveNbr?: string,
-): Promise<Permanent> => {
-  const permanent = new Permanent({
-    sessionToken,
-    mfaToken,
-    archiveId,
-    archiveNbr,
-    baseUrl,
-  });
-  await permanent.init();
-  return permanent;
-};
-
 const getOrCreateEtherpadFolder = async (permanent: Permanent) => {
   const appFolder = await permanent.folder.getAppFolder();
   const childFolders = appFolder.ChildFolderVOs || [];
@@ -73,8 +56,7 @@ const getSyncTarget = async (
 };
 
 const uploadText = async (
-  session: string,
-  mfa: string,
+  accessToken: string,
   target: PermanentUploadTarget,
   displayName: string,
   filename: string,
@@ -90,7 +72,8 @@ const uploadText = async (
     uploadFileName: filename,
   };
 
-  const permanent = await createClient(session, mfa, target.archiveId, target.archiveNbr);
+  const permanent = client.loadToken(JSON.parse(accessToken));
+  await permanent.session.useArchive(target.archiveNbr);
   const { destinationUrl, presignedPost } = await permanent.record.getPresignedUrl('text/plain', record, padToken);
 
   const form = buildForm(presignedPost.fields, data);

@@ -20,8 +20,7 @@ const debounceUpdate = debounce(async (pad: Pad): Promise<void> => {
   (await getSyncConfigs(pad.id))
     .filter((config): config is SyncConfigEnabled => config.sync === true)
     .forEach(({ credentials, target }) => uploadText(
-      'session',
-      'mfa',
+      credentials.token,
       target,
       `${pad.id}.r${pad.head}.txt`,
       `${pad.id}.r${pad.head}.txt`,
