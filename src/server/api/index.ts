@@ -20,8 +20,8 @@ import type {
 const { cookieSecret } = pluginSettings;
 
 const hasTokenCookie = (req: Request): boolean => (
-  'cookies' in req
-  && 'permanentToken' in req.cookies
+  'signedCookies' in req
+  && 'permanentToken' in req.signedCookies
 );
 
 const getPadPermanentConfig: Handler = async (
@@ -168,6 +168,7 @@ const completeOauth: Handler = async (
     sameSite: 'strict',
     secure: true,
     signed: true,
+    path: '/',
   });
 
   res.redirect(`${req.baseUrl}/`);
