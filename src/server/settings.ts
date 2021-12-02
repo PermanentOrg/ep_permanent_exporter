@@ -1,9 +1,12 @@
 import * as EtherpadSettings from 'ep_etherpad-lite/node/utils/Settings';
 
 interface PermanentExporterSettings {
+  authHost: string;
   baseUrl: string;
+  clientId: string;
+  clientSecret: string;
+  cookieSecret: string;
   padToken: string;
-  loginUrl: string;
   waitMilliseconds: number;
   wallet: string;
 }

@@ -9,30 +9,11 @@ interface SyncConfigDisabled {
   sync: false;
 }
 
-interface SyncConfigPending {
-  sync: 'pending';
-  credentials: {
-    type: 'cookies';
-    session: string;
-    mfa: string;
-  };
-}
-
-interface SyncConfigInvalid {
-  sync: 'invalid';
-  credentials: {
-    type: 'cookies';
-    session: string;
-    mfa: string;
-  };
-}
-
 export interface SyncConfigEnabled {
   sync: true;
   credentials: {
-    type: 'cookies';
-    session: string;
-    mfa: string;
+    type: 'token';
+    token: object;
   };
   target: {
     archiveId: number;
@@ -43,8 +24,7 @@ export interface SyncConfigEnabled {
   };
 }
 
-export type SyncConfig = SyncConfigDisabled | SyncConfigPending
-  | SyncConfigInvalid | SyncConfigEnabled;
+export type SyncConfig = SyncConfigDisabled | SyncConfigEnabled;
 
 const getSyncConfig = async (
   padId: string,

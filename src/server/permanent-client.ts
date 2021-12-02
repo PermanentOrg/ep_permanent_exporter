@@ -1,10 +1,17 @@
 import axios from 'axios';
-import { Permanent } from '@permanentorg/node-sdk';
+import { Permanent, PermanentOAuthClient } from '@permanentorg/node-sdk';
 import FormData from 'form-data';
 
 import { pluginSettings } from './settings';
 
-const { baseUrl, padToken } = pluginSettings;
+const { authHost, baseUrl, clientId, clientSecret, padToken } = pluginSettings;
+
+const client = new PermanentOAuthClient(
+  clientId,
+  clientSecret,
+  baseUrl,
+  authHost,
+);
 
 const createClient = async (
   sessionToken: string,
@@ -99,4 +106,4 @@ const uploadText = async (
   );
 };
 
-export { getSyncTarget, uploadText };
+export { client, getSyncTarget, uploadText };
