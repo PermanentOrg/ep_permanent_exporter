@@ -48,7 +48,7 @@ const enableSync: Handler = async (
   res: Response,
 ): Promise<void> => {
   try {
-    const author = await getAuthor4Token(req.signedCookies.permanentToken);
+    const author = await getAuthor4Token(req.cookies.token);
     console.log('author is ' + author);
     const config = await getSyncConfig(req.params.pad, author);
 
@@ -72,9 +72,17 @@ const enableSync: Handler = async (
 
     const accessToken = req.signedCookies.permanentToken;
 
+    setSyncConfig(req.params.pad, author, {
+      sync: 'pending',
+      credentials: {
+        type: 'token',
+        token: accessToken,
+      },
+    });
+
     res.status(202).json({
       loggedInToPermanent: true,
-      sync: true,
+      sync: 'pending',
     });
 
     setImmediate(() => {
@@ -156,6 +164,8 @@ const completeOauth: Handler = async (
   );
 
   console.log(permanent.getAccessToken());
+
+  // TODO: set cookie expiration time to match token expiration time
   res.cookie('permanentToken', JSON.stringify(permanent.getAccessToken()), {
     httpOnly: true,
     sameSite: 'strict',

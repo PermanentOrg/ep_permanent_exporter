@@ -9,6 +9,14 @@ interface SyncConfigDisabled {
   sync: false;
 }
 
+interface SyncConfigPending {
+  sync: 'pending';
+  credentials: {
+    type: 'token';
+    token: object;
+  };
+}
+
 export interface SyncConfigEnabled {
   sync: true;
   credentials: {
@@ -24,7 +32,8 @@ export interface SyncConfigEnabled {
   };
 }
 
-export type SyncConfig = SyncConfigDisabled | SyncConfigEnabled;
+export type SyncConfig = SyncConfigDisabled | SyncConfigPending
+ | SyncConfigEnabled;
 
 const getSyncConfig = async (
   padId: string,
