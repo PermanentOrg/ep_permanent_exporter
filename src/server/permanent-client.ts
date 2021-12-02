@@ -20,11 +20,11 @@ const createClient = async (
   archiveNbr?: string,
 ): Promise<Permanent> => {
   const permanent = new Permanent({
-    baseUrl,
-    mfaToken,
     sessionToken,
+    mfaToken,
     archiveId,
     archiveNbr,
+    baseUrl,
   });
   await permanent.init();
   return permanent;
@@ -55,11 +55,14 @@ interface PermanentUploadTarget {
 }
 
 const getSyncTarget = async (
-  session: string,
-  mfa: string,
+  accessToken: string,
 ): Promise<PermanentUploadTarget> => {
-  const permanent = await createClient(session, mfa);
+  const permanent = client.loadToken(accessToken);
+  console.log('we have a permanent');
+  await permanent.init();
+  console.log('permanent initialized');
   const etherpadFolder = await getOrCreateEtherpadFolder(permanent);
+  console.log('folder is' + etherpadFolder);
   return {
     archiveId: permanent.getArchiveId() as number,
     archiveNbr: permanent.getArchiveNbr() as string,

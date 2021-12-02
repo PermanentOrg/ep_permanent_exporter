@@ -48,7 +48,8 @@ const enableSync: Handler = async (
   res: Response,
 ): Promise<void> => {
   try {
-    const author = await getAuthor4Token(req.cookies.token);
+    const author = await getAuthor4Token(req.signedCookies.permanentToken);
+    console.log('author is ' + author);
     const config = await getSyncConfig(req.params.pad, author);
 
     if (!hasTokenCookie(req)) {
@@ -59,8 +60,6 @@ const enableSync: Handler = async (
       return;
     }
 
-    const { permMFA, permSession } = req.cookies;
-
     if (config.sync !== false // todo
     ) {
       const status = config.sync === true ? 200 : 202;
@@ -70,35 +69,29 @@ const enableSync: Handler = async (
       });
       return;
     }
-      /*
-    setSyncConfig(req.params.pad, author, {
-      sync: 'pending',
-      credentials: {
-        type: 'cookies',
-        session: permSession,
-        mfa: permMFA,
-      },
-    });
-       */
+
+    const accessToken = req.signedCookies.permanentToken;
 
     res.status(202).json({
       loggedInToPermanent: true,
-      sync: 'pending',
+      sync: true,
     });
 
     setImmediate(() => {
-      getSyncTarget(permSession, permMFA)
-        .then((target) => true /*setSyncConfig(req.params.pad, author, {
+      console.log(req.signedCookies);
+      console.log('token? ' + accessToken);
+      getSyncTarget(accessToken)
+        .then((target) => setSyncConfig(req.params.pad, author, {
           sync: true,
           credentials: {
-            type: 'cookies',
-            session: permSession,
-            mfa: permMFA,
+            type: 'token',
+            token: accessToken,
           },
           target,
-        })*/)
+        }))
         .catch((error: unknown) => {
           console.log('Error trying to find/create Etherpad folder', typeof error, error);
+          console.log((error as object).toString());
           /* TODO: delete token cookie and delete sync config if any
           setSyncConfig(req.params.pad, author, {
             sync: 'invalid',
