@@ -24,6 +24,34 @@ const hasTokenCookie = (req: Request): boolean => (
   && 'permanentToken' in req.signedCookies
 );
 
+const isLoggedIn = async (req: Request,): boolean => {
+    try {
+        const author = await getAuthor4Token(req.cookies.token);
+        const rawToken = await getAuthorToken(author);
+        if (rawToken === null) {
+            return false;
+        }
+        if (
+        // rehydrate the token
+        const token = client.loadToken(rawToken);
+        if (!token.expired()) {
+            return true;
+        }
+        if (!'refresh_token' in token.token) {
+            return false;
+        }
+        setImmediate(() => {
+            /* check db field for "working on this"
+               if so...wait
+            //
+            // try to refresh
+            // if successful, update db
+            // if unsuccessful, delete from db
+*/
+        });
+    } 
+};
+
 const getPadPermanentConfig: Handler = async (
   req: Request,
   res: Response,

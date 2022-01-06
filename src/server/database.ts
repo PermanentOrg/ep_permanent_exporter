@@ -5,6 +5,11 @@ import {
   set,
 } from 'ep_etherpad-lite/node/db/DB';
 
+interface AuthorTokenStatus {
+    token: object|null;
+    status: 'pending'|'valid'|null;
+}
+
 interface SyncConfigDisabled {
   sync: false;
 }
@@ -34,6 +39,19 @@ export interface SyncConfigEnabled {
 
 export type SyncConfig = SyncConfigDisabled | SyncConfigPending
  | SyncConfigEnabled;
+
+const getAuthorToken = async (
+    authorId: string,
+): Promise<object|null> => (
+    await get(`permanent:${authorId}`)
+);
+
+const setAuthorToken = async(
+    authorId: string,
+    token: object,
+): Promise<null> => (
+    await set(`permanent:${authorId}`, token)
+);
 
 const getSyncConfig = async (
   padId: string,
