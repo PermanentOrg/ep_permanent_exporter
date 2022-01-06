@@ -40,7 +40,19 @@ interface PermanentUploadTarget {
 const getSyncTarget = async (
   accessToken: string,
 ): Promise<PermanentUploadTarget> => {
-  const permanent = client.loadToken(accessToken);
+    const fullToken = client.loadToken(accessToken);
+    if (fullToken.expired()) {
+        console.log("DEBUG: token expired");
+        console.log("Old token: " + fullToken.token.access_token);
+        fullToken.refresh();
+        console.log("DEBUG: we refreshed it");
+        console.log("New token: " + fullToken.token.access_token);
+        console.log(fullToken.expired());
+    }
+  const permanent = new Permanent({
+    accessToken: fullToken,
+    baseUrl: baseUrl,
+  });
   await permanent.init();
   const etherpadFolder = await getOrCreateEtherpadFolder(permanent);
   return {
@@ -69,7 +81,20 @@ const uploadText = async (
     uploadFileName: filename,
   };
 
-  const permanent = client.loadToken(JSON.parse(accessToken));
+    const fullToken = client.loadToken(JSON.parse(accessToken));
+    let newToken = fullToken;
+    if (fullToken.expired()) {
+        console.log("DEBUG: token expired");
+        console.log("Old token: " + fullToken.token.access_token);
+        newToken = await fullToken.refresh();
+        console.log("DEBUG: we refreshed it");
+        console.log("New token: " + newToken.token.access_token);
+        console.log(newToken.expired());
+    }
+  const permanent = new Permanent({
+    accessToken: newToken,
+    baseUrl: baseUrl,
+  });
   await permanent.session.useArchive(target.archiveNbr);
   const { destinationUrl, presignedPost } = await permanent.record.getPresignedUrl('text/plain', record, padToken);
 

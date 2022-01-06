@@ -132,7 +132,7 @@ const redirectIdP: Handler = async (
 ): Promise<void> => {
   res.redirect(client.authorizeUrl(
     `${req.protocol}://${req.get('host')}/permanent/callback`,
-    'offline',
+    'offline_access',
     'state',
   ));
 }
@@ -145,7 +145,7 @@ const completeOauth: Handler = async (
   const permanent = await client.completeAuthorization(
     `${req.protocol}://${req.get('host')}/permanent/callback`,
     code as string,
-    'offline',
+    'offline_access',
     state as string,
   );
 
