@@ -4,11 +4,14 @@ import express from 'express';
 import { getAuthor4Token } from 'ep_etherpad-lite/node/db/AuthorManager';
 import {
   SyncConfig,
+  deleteAuthorToken,
   deleteSyncConfig,
   getSyncConfig,
+  setAuthorToken,
   setSyncConfig,
 } from '../database';
-import { client, getSyncTarget } from '../permanent-client';
+import { getSyncTarget } from '../permanent-client';
+import { authorTokenIsLive, client, getOrRefreshToken } from '../permanent-oauth';
 import { pluginSettings } from '../settings';
 import type {
   Handler,
@@ -16,48 +19,26 @@ import type {
   Response,
 } from 'express';
 
-const checkToken = async (author: string): boolean | 'refreshing' => {
-  try {
-    const authorToken = await getAuthorToken(author);
-    if (authorToken.status === 'missing') {
-      return false;
-    }
-    if (authorToken.status === 'refreshing') {
-      return 'refreshing';
-    }
-    const token = client.loadToken(authorToken.token);
-    if (!token.expired()) {
-      return true;
-    }
-    if (!('refresh_token' in token.token)) {
-      // token has expired and it is not a refresh token
-      await deleteAuthorToken(author);
-      return false;
-    }
-
-    // the token has expired, but we haven't tried to refresh it yet
-    await setAuthorToken(author, {
-      status: 'refreshing';
-      token: authorToken.token,
-    });
-    setImmediate(() => {
-      console.log('Refreshing expired token', token.token);
-      token.token.refresh()
-        .then((refreshedToken) => {
-          console.log('Refreshed token', refreshedToken.token);
-          setAuthorToken(author, {
-            token: refreshedToken,
-            status: 'valid',
-          });
-        )
-        .catch((err: unknown) => {
-          console.log('Error while refreshing token for author', author, err);
-          return deleteAuthorToken(author);
-        });
-    });
-  } catch (err: unknown) {
-    console.log('Error trying to determine if user is logged in to Permanent', typeof error, error);
-    return false;
+const authorIsLoggedInToPermanent: Handler = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
+  const author = await getAuthor4Token(req.cookies.token);
+  const { status } = await getOrRefreshToken(author);
+  switch(status) {
+    case 'refreshing':
+      res.json({ loginStatus: 'pending' });
+      return;
+    case 'missing':
+      res.json({ loginStatus: 'logged-out' });
+      return;
+    case 'valid':
+      res.json({ loginStatus: 'logged-in' });
+      return;
+    default:
+      // log an error? idk
+      res.json({ loginStatus: 'logged-out' });
+      return;
   }
 };
 
@@ -67,10 +48,9 @@ const getPadPermanentConfig: Handler = async (
 ): Promise<void> => {
   try {
     const author = await getAuthor4Token(req.cookies.token);
-    const config = await getSyncConfig(req.params.pad, author);
+    const { sync } = await getSyncConfig(req.params.pad, author);
     res.json({
-      loggedInToPermanent: hasTokenCookie(req),
-      sync: config.sync,
+      sync,
     });
   } catch (err: unknown) {
     res.json({
@@ -86,47 +66,42 @@ const enableSync: Handler = async (
   try {
     const author = await getAuthor4Token(req.cookies.token);
     const config = await getSyncConfig(req.params.pad, author);
+    const authorToken = await getOrRefreshToken(author);
 
-    if (!hasTokenCookie(req)) {
+    if (!authorTokenIsLive(authorToken)) {
       res.status(401).json({
-        loggedInToPermanent: false,
         sync: config.sync,
       });
       return;
     }
 
-    if (config.sync !== false // todo
-    ) {
+    if (config.sync !== false) {
       const status = config.sync === true ? 200 : 202;
       res.status(status).json({
-        loggedInToPermanent: true,
         sync: config.sync,
       });
       return;
     }
-
-    const accessToken = req.signedCookies.permanentToken;
 
     setSyncConfig(req.params.pad, author, {
       sync: 'pending',
       credentials: {
-        type: 'token',
-        token: accessToken,
+        type: 'author',
+        author,
       },
     });
 
     res.status(202).json({
-      loggedInToPermanent: true,
       sync: 'pending',
     });
 
     setImmediate(() => {
-      getSyncTarget(accessToken)
+      getSyncTarget(authorToken)
         .then((target) => setSyncConfig(req.params.pad, author, {
           sync: true,
           credentials: {
-            type: 'token',
-            token: JSON.stringify(accessToken),
+            type: 'author',
+            author: author,
           },
           target,
         }))
@@ -134,7 +109,7 @@ const enableSync: Handler = async (
           console.log('Error trying to find/create Etherpad folder', typeof error, error);
           console.log((error as object).toString());
           deleteSyncConfig(req.params.pad, author);
-          // TODO: delete token cookie
+          // TODO: delete author token because it's invalid, maybe?
         });
     });
   } catch (err: unknown) {
@@ -153,7 +128,6 @@ const disableSync: Handler = async (
     const config = await getSyncConfig(req.params.pad, author);
     deleteSyncConfig(req.params.pad, author);
     res.status(202).json({
-      loggedInToPermanent: hasTokenCookie(req),
       sync: config.sync,
     });
   } catch (err: unknown) {
@@ -167,6 +141,7 @@ const redirectIdP: Handler = async (
   req: Request,
   res: Response,
 ): Promise<void> => {
+  // todo: save current URL to database to redirect to after
   res.redirect(client.authorizeUrl(
     `${req.protocol}://${req.get('host')}/permanent/callback`,
     'offline_access',
@@ -179,33 +154,36 @@ const completeOauth: Handler = async (
   res: Response,
 ): Promise<void> => {
   const { code, state } = req.query;
-  const token = await client.completeAuthorization(
-    `${req.protocol}://${req.get('host')}/permanent/callback`,
-    code as string,
-    'offline_access',
-    state as string,
-  );
+  const author = await getAuthor4Token(req.cookies.token);
 
-  // TODO: set cookie expiration time to match token expiration time
-  res.cookie('permanentToken', JSON.stringify(permanent.getAccessToken()), {
-    httpOnly: true,
-    sameSite: 'strict',
-    secure: true,
-    signed: true,
-    path: '/',
-  });
+  try {
+    const token = await client.completeAuthorization(
+      `${req.protocol}://${req.get('host')}/permanent/callback`,
+      code as string,
+      'offline_access',
+      state as string,
+    );
 
-  res.redirect(`${req.baseUrl}/`);
+    await setAuthorToken(author, {
+      status: 'valid',
+      token,
+    });
+
+    // todo: load old URL from database to redirect to
+    res.redirect(`${req.baseUrl}/`);
+  } catch(error: unknown) {
+    await deleteAuthorToken(author);
+    console.log('Error completing OAuth authorization grant', error);
+    res.status(401).json({ loginStatus: 'logged-out' });
+  }
 }
 
 const router = express.Router({ mergeParams: true });
-router.use([
-  cookieParser(cookieSecret),
-]);
 router.get('/p/:pad/permanent', getPadPermanentConfig);
 router.post('/p/:pad/permanent', enableSync);
 router.delete('/p/:pad/permanent', disableSync);
 router.get('/permanent/auth', redirectIdP);
 router.get('/permanent/callback', completeOauth);
+router.get('/permanent/status', authorIsLoggedInToPermanent);
 
 export { router };

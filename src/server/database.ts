@@ -5,21 +5,30 @@ import {
   set,
 } from 'ep_etherpad-lite/node/db/DB';
 
+import type { AccessToken } from 'simple-oauth2';
+
 interface AuthorTokenMissing {
   status: 'missing';
 }
 
-interface AuthorTokenRefreshing {
+// this is necessary to prevent (or at least reduce?) race conditions
+export interface AuthorTokenRefreshing {
   token: object;
   status: 'refreshing';
 }
 
-interface AuthorTokenValid {
+export interface AuthorTokenValid {
   token: object;
   status: 'valid';
 }
 
-export type AuthorToken = AuthorTokenMissing | AuthorTokenPending | AuthorTokenValid;
+export interface AuthorTokenLive {
+  token: AccessToken;
+  status: 'live';
+}
+
+export type AuthorToken = AuthorTokenMissing | AuthorTokenRefreshing
+  | AuthorTokenValid | AuthorTokenLive;
 
 interface SyncConfigDisabled {
   sync: false;
@@ -53,15 +62,15 @@ export type SyncConfig = SyncConfigDisabled | SyncConfigPending
 
 const getAuthorToken = async (
   authorId: string,
-): Promise<AuthorToken> => (
+): Promise<AuthorTokenMissing | AuthorTokenRefreshing | AuthorTokenValid> => (
   await get(`permanent:${authorId}`) || {
-    status: 'missing';
+    status: 'missing',
   }
 );
 
 const setAuthorToken = async (
   authorId: string,
-  authorToken: AuthorToken,
+  authorToken: AuthorTokenMissing | AuthorTokenRefreshing | AuthorTokenValid,
 ): Promise<null> => (
   await set(`permanent:${authorId}`, authorToken)
 );
@@ -104,8 +113,11 @@ const deleteSyncConfig = async (
 );
 
 export {
+  deleteAuthorToken,
   deleteSyncConfig,
+  getAuthorToken,
   getSyncConfig,
   getSyncConfigs,
+  setAuthorToken,
   setSyncConfig,
 };

@@ -1,19 +1,13 @@
 import axios from 'axios';
-import { Permanent, PermanentOAuthClient } from '@permanentorg/node-sdk';
+import { Permanent } from '@permanentorg/node-sdk';
 import FormData from 'form-data';
 
 import { pluginSettings } from './settings';
 
-const {
-  authHost, baseUrl, clientId, clientSecret, padToken,
-} = pluginSettings;
+import type { AuthorTokenLive } from './database';
+import type { AccessToken } from 'simple-oauth2';
 
-const client = new PermanentOAuthClient(
-  clientId,
-  clientSecret,
-  baseUrl,
-  authHost,
-);
+const { baseUrl, padToken } = pluginSettings;
 
 const getOrCreateEtherpadFolder = async (permanent: Permanent) => {
   const appFolder = await permanent.folder.getAppFolder();
@@ -40,19 +34,10 @@ interface PermanentUploadTarget {
 }
 
 const getSyncTarget = async (
-  accessToken: string,
+  { token }: AuthorTokenLive,
 ): Promise<PermanentUploadTarget> => {
-  const fullToken = client.loadToken(accessToken);
-  if (fullToken.expired()) {
-    console.log('DEBUG: token expired');
-    console.log(`Old token: ${fullToken.token.access_token}`);
-    fullToken.refresh();
-    console.log('DEBUG: we refreshed it');
-    console.log(`New token: ${fullToken.token.access_token}`);
-    console.log(fullToken.expired());
-  }
   const permanent = new Permanent({
-    accessToken: fullToken,
+    accessToken: token,
     baseUrl,
   });
   await permanent.init();
@@ -67,7 +52,7 @@ const getSyncTarget = async (
 };
 
 const uploadText = async (
-  accessToken: string,
+  accessToken: AccessToken,
   target: PermanentUploadTarget,
   displayName: string,
   filename: string,
@@ -83,18 +68,8 @@ const uploadText = async (
     uploadFileName: filename,
   };
 
-  const fullToken = client.loadToken(JSON.parse(accessToken));
-  let newToken = fullToken;
-  if (fullToken.expired()) {
-    console.log('DEBUG: token expired');
-    console.log(`Old token: ${fullToken.token.access_token}`);
-    newToken = await fullToken.refresh();
-    console.log('DEBUG: we refreshed it');
-    console.log(`New token: ${newToken.token.access_token}`);
-    console.log(newToken.expired());
-  }
   const permanent = new Permanent({
-    accessToken: newToken,
+    accessToken,
     baseUrl,
   });
   await permanent.session.useArchive(target.archiveNbr);
@@ -116,4 +91,4 @@ const uploadText = async (
   );
 };
 
-export { client, getSyncTarget, uploadText };
+export { getSyncTarget, uploadText };

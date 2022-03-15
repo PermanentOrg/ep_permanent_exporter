@@ -2,8 +2,9 @@
 
 import { debounce } from 'lodash';
 import { pluginSettings } from './settings';
-import { getSyncConfigs } from './database';
+import { getSyncConfigs, deleteSyncConfig } from './database';
 import { uploadText } from './permanent-client';
+import { getOrRefreshToken } from './permanent-oauth';
 import type { SyncConfigEnabled } from './database';
 
 interface Pad {
@@ -19,15 +20,30 @@ const debounceUpdate = debounce(async (pad: Pad): Promise<void> => {
 
   (await getSyncConfigs(pad.id))
     .filter((config): config is SyncConfigEnabled => config.sync === true)
-    .forEach(({ credentials, target }) => uploadText(
-      credentials.token,
-      target,
-      `${pad.id}.r${pad.head}.txt`,
-      `${pad.id}.r${pad.head}.txt`,
-      `Text of ${pad.id} at revision ${pad.head}`,
-      pad.atext.text,
-    ));
-  // TODO: error handling to set invalid credentials on failure
+    .forEach(async ({ credentials, target }) => {
+      const authorToken = await getOrRefreshToken(credentials.author);
+      switch(authorToken.status) {
+        case 'missing':
+          deleteSyncConfig(pad.id, credentials.author);
+          return;
+        case 'refreshing':
+          // todo
+          return;
+        case 'live':
+          await uploadText(
+            authorToken.token,
+            target,
+            `${pad.id}.r${pad.head}.txt`,
+            `${pad.id}.r${pad.head}.txt`,
+            `Text of ${pad.id} at revision ${pad.head}`,
+            pad.atext.text,
+          );
+          return;
+        default:
+          // todo what could possibly have happened here
+          return;
+      }
+    });
 }, pluginSettings.waitMilliseconds);
 
 const padUpdate = (hookName: string, args: { pad: Pad }) => {

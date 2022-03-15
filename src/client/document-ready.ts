@@ -39,18 +39,21 @@ const syncElements = [
 ];
 
 const checkPermanentSyncStatus = async () => {
-  const { loggedInToPermanent, sync } = await $.getJSON(`${padUrl()}/permanent`);
+  const { loginStatus } = await $.getJSON('/permanent/status');
+  const { sync } = await $.getJSON(`${padUrl()}/permanent`);
 
-  if (sync === true) {
-    showOneOfGroup(syncElements, 'sync-enabled');
-  } else if (loggedInToPermanent === 'pending') {
+  if (loginStatus === 'logged-in') {
+    if (sync === true) {
+      showOneOfGroup(syncElements, 'sync-enabled');
+    } else if (sync === 'pending') {
+      showOneOfGroup(syncElements, 'sync-pending');
+      setTimeout(checkPermanentSyncStatus, 1000);
+    } else {
+      showOneOfGroup(syncElements, 'sync-disabled');
+    }
+  } else if (loginStatus === 'pending') {
     showOneOfGroup(syncElements, 'log-in-pending');
     setTimeout(checkPermanentSyncStatus, 1000);
-  } else if (loggedInToPermanent && sync === 'pending') {
-    showOneOfGroup(syncElements, 'sync-pending');
-    setTimeout(checkPermanentSyncStatus, 1000);
-  } else if (loggedInToPermanent) {
-    showOneOfGroup(syncElements, 'sync-disabled');
   } else {
     showOneOfGroup(syncElements, 'log-in');
   }
