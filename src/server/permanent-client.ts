@@ -4,7 +4,9 @@ import FormData from 'form-data';
 
 import { pluginSettings } from './settings';
 
-const { authHost, baseUrl, clientId, clientSecret, padToken } = pluginSettings;
+const {
+  authHost, baseUrl, clientId, clientSecret, padToken,
+} = pluginSettings;
 
 const client = new PermanentOAuthClient(
   clientId,
@@ -40,18 +42,18 @@ interface PermanentUploadTarget {
 const getSyncTarget = async (
   accessToken: string,
 ): Promise<PermanentUploadTarget> => {
-    const fullToken = client.loadToken(accessToken);
-    if (fullToken.expired()) {
-        console.log("DEBUG: token expired");
-        console.log("Old token: " + fullToken.token.access_token);
-        fullToken.refresh();
-        console.log("DEBUG: we refreshed it");
-        console.log("New token: " + fullToken.token.access_token);
-        console.log(fullToken.expired());
-    }
+  const fullToken = client.loadToken(accessToken);
+  if (fullToken.expired()) {
+    console.log('DEBUG: token expired');
+    console.log(`Old token: ${fullToken.token.access_token}`);
+    fullToken.refresh();
+    console.log('DEBUG: we refreshed it');
+    console.log(`New token: ${fullToken.token.access_token}`);
+    console.log(fullToken.expired());
+  }
   const permanent = new Permanent({
     accessToken: fullToken,
-    baseUrl: baseUrl,
+    baseUrl,
   });
   await permanent.init();
   const etherpadFolder = await getOrCreateEtherpadFolder(permanent);
@@ -81,19 +83,19 @@ const uploadText = async (
     uploadFileName: filename,
   };
 
-    const fullToken = client.loadToken(JSON.parse(accessToken));
-    let newToken = fullToken;
-    if (fullToken.expired()) {
-        console.log("DEBUG: token expired");
-        console.log("Old token: " + fullToken.token.access_token);
-        newToken = await fullToken.refresh();
-        console.log("DEBUG: we refreshed it");
-        console.log("New token: " + newToken.token.access_token);
-        console.log(newToken.expired());
-    }
+  const fullToken = client.loadToken(JSON.parse(accessToken));
+  let newToken = fullToken;
+  if (fullToken.expired()) {
+    console.log('DEBUG: token expired');
+    console.log(`Old token: ${fullToken.token.access_token}`);
+    newToken = await fullToken.refresh();
+    console.log('DEBUG: we refreshed it');
+    console.log(`New token: ${newToken.token.access_token}`);
+    console.log(newToken.expired());
+  }
   const permanent = new Permanent({
     accessToken: newToken,
-    baseUrl: baseUrl,
+    baseUrl,
   });
   await permanent.session.useArchive(target.archiveNbr);
   const { destinationUrl, presignedPost } = await permanent.record.getPresignedUrl('text/plain', record, padToken);

@@ -5,10 +5,21 @@ import {
   set,
 } from 'ep_etherpad-lite/node/db/DB';
 
-interface AuthorTokenStatus {
-    token: object|null;
-    status: 'pending'|'valid'|null;
+interface AuthorTokenMissing {
+  status: 'missing';
 }
+
+interface AuthorTokenRefreshing {
+  token: object;
+  status: 'refreshing';
+}
+
+interface AuthorTokenValid {
+  token: object;
+  status: 'valid';
+}
+
+export type AuthorToken = AuthorTokenMissing | AuthorTokenPending | AuthorTokenValid;
 
 interface SyncConfigDisabled {
   sync: false;
@@ -17,16 +28,16 @@ interface SyncConfigDisabled {
 interface SyncConfigPending {
   sync: 'pending';
   credentials: {
-    type: 'token';
-    token: string; // serialized JSON
+    type: 'author';
+    author: string;
   };
 }
 
 export interface SyncConfigEnabled {
   sync: true;
   credentials: {
-    type: 'token';
-    token: string; // serialized JSON
+    type: 'author';
+    author: string;
   };
   target: {
     archiveId: number;
@@ -41,16 +52,24 @@ export type SyncConfig = SyncConfigDisabled | SyncConfigPending
  | SyncConfigEnabled;
 
 const getAuthorToken = async (
-    authorId: string,
-): Promise<object|null> => (
-    await get(`permanent:${authorId}`)
+  authorId: string,
+): Promise<AuthorToken> => (
+  await get(`permanent:${authorId}`) || {
+    status: 'missing';
+  }
 );
 
-const setAuthorToken = async(
-    authorId: string,
-    token: object,
+const setAuthorToken = async (
+  authorId: string,
+  authorToken: AuthorToken,
 ): Promise<null> => (
-    await set(`permanent:${authorId}`, token)
+  await set(`permanent:${authorId}`, authorToken)
+);
+
+const deleteAuthorToken = async (
+  authorId: string,
+): Promise<SyncConfig> => (
+  remove(`permanent:${authorId}`)
 );
 
 const getSyncConfig = async (

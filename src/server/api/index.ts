@@ -1,6 +1,5 @@
 /* eslint-disable no-console -- console logging is a useful initial prototype */
 
-import cookieParser from 'cookie-parser';
 import express from 'express';
 import { getAuthor4Token } from 'ep_etherpad-lite/node/db/AuthorManager';
 import {
@@ -17,39 +16,49 @@ import type {
   Response,
 } from 'express';
 
-const { cookieSecret } = pluginSettings;
+const checkToken = async (author: string): boolean | 'refreshing' => {
+  try {
+    const authorToken = await getAuthorToken(author);
+    if (authorToken.status === 'missing') {
+      return false;
+    }
+    if (authorToken.status === 'refreshing') {
+      return 'refreshing';
+    }
+    const token = client.loadToken(authorToken.token);
+    if (!token.expired()) {
+      return true;
+    }
+    if (!('refresh_token' in token.token)) {
+      // token has expired and it is not a refresh token
+      await deleteAuthorToken(author);
+      return false;
+    }
 
-const hasTokenCookie = (req: Request): boolean => (
-  'signedCookies' in req
-  && 'permanentToken' in req.signedCookies
-);
-
-const isLoggedIn = async (req: Request,): boolean => {
-    try {
-        const author = await getAuthor4Token(req.cookies.token);
-        const rawToken = await getAuthorToken(author);
-        if (rawToken === null) {
-            return false;
-        }
-        if (
-        // rehydrate the token
-        const token = client.loadToken(rawToken);
-        if (!token.expired()) {
-            return true;
-        }
-        if (!'refresh_token' in token.token) {
-            return false;
-        }
-        setImmediate(() => {
-            /* check db field for "working on this"
-               if so...wait
-            //
-            // try to refresh
-            // if successful, update db
-            // if unsuccessful, delete from db
-*/
+    // the token has expired, but we haven't tried to refresh it yet
+    await setAuthorToken(author, {
+      status: 'refreshing';
+      token: authorToken.token,
+    });
+    setImmediate(() => {
+      console.log('Refreshing expired token', token.token);
+      token.token.refresh()
+        .then((refreshedToken) => {
+          console.log('Refreshed token', refreshedToken.token);
+          setAuthorToken(author, {
+            token: refreshedToken,
+            status: 'valid',
+          });
+        )
+        .catch((err: unknown) => {
+          console.log('Error while refreshing token for author', author, err);
+          return deleteAuthorToken(author);
         });
-    } 
+    });
+  } catch (err: unknown) {
+    console.log('Error trying to determine if user is logged in to Permanent', typeof error, error);
+    return false;
+  }
 };
 
 const getPadPermanentConfig: Handler = async (
@@ -170,7 +179,7 @@ const completeOauth: Handler = async (
   res: Response,
 ): Promise<void> => {
   const { code, state } = req.query;
-  const permanent = await client.completeAuthorization(
+  const token = await client.completeAuthorization(
     `${req.protocol}://${req.get('host')}/permanent/callback`,
     code as string,
     'offline_access',
