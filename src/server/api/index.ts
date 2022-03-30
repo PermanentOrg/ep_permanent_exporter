@@ -32,6 +32,7 @@ const authorIsLoggedInToPermanent: Handler = async (
     case 'missing':
       res.json({ loginStatus: 'logged-out' });
       return;
+    case 'live':
     case 'valid':
       res.json({ loginStatus: 'logged-in' });
       return;
@@ -166,7 +167,7 @@ const completeOauth: Handler = async (
 
     await setAuthorToken(author, {
       status: 'valid',
-      token,
+      token: token.token,
     });
 
     // todo: load old URL from database to redirect to

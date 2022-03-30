@@ -30,14 +30,18 @@ const debounceUpdate = debounce(async (pad: Pad): Promise<void> => {
           // todo
           return;
         case 'live':
-          await uploadText(
-            authorToken.token,
-            target,
-            `${pad.id}.r${pad.head}.txt`,
-            `${pad.id}.r${pad.head}.txt`,
-            `Text of ${pad.id} at revision ${pad.head}`,
-            pad.atext.text,
-          );
+          try {
+            await uploadText(
+              authorToken.token,
+              target,
+              `${pad.id}.r${pad.head}.txt`,
+              `${pad.id}.r${pad.head}.txt`,
+              `Text of ${pad.id} at revision ${pad.head}`,
+              pad.atext.text,
+            );
+          } catch (err: unknown) {
+            console.log('Error uploading text', credentials.author, pad.id, err);
+          }
           return;
         default:
           // todo what could possibly have happened here

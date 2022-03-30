@@ -30,6 +30,27 @@ export interface AuthorTokenLive {
 export type AuthorToken = AuthorTokenMissing | AuthorTokenRefreshing
   | AuthorTokenValid | AuthorTokenLive;
 
+const getAuthorToken = async (
+  authorId: string,
+): Promise<AuthorTokenMissing | AuthorTokenRefreshing | AuthorTokenValid> => (
+  await get(`permanent:${authorId}`) || {
+    status: 'missing',
+  }
+);
+
+const setAuthorToken = async (
+  authorId: string,
+  authorToken: AuthorTokenRefreshing | AuthorTokenValid,
+): Promise<null> => (
+  set(`permanent:${authorId}`, authorToken)
+);
+
+const deleteAuthorToken = async (
+  authorId: string,
+): Promise<SyncConfig> => (
+  remove(`permanent:${authorId}`)
+);
+
 interface SyncConfigDisabled {
   sync: false;
 }
@@ -59,27 +80,6 @@ export interface SyncConfigEnabled {
 
 export type SyncConfig = SyncConfigDisabled | SyncConfigPending
  | SyncConfigEnabled;
-
-const getAuthorToken = async (
-  authorId: string,
-): Promise<AuthorTokenMissing | AuthorTokenRefreshing | AuthorTokenValid> => (
-  await get(`permanent:${authorId}`) || {
-    status: 'missing',
-  }
-);
-
-const setAuthorToken = async (
-  authorId: string,
-  authorToken: AuthorTokenMissing | AuthorTokenRefreshing | AuthorTokenValid,
-): Promise<null> => (
-  await set(`permanent:${authorId}`, authorToken)
-);
-
-const deleteAuthorToken = async (
-  authorId: string,
-): Promise<SyncConfig> => (
-  remove(`permanent:${authorId}`)
-);
 
 const getSyncConfig = async (
   padId: string,

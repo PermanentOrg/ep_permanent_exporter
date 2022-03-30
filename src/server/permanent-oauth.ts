@@ -36,7 +36,7 @@ const getOrRefreshToken = async (author: string): Promise<AuthorToken> => {
       return authorToken;
     }
 
-    const token = client.loadToken(authorToken.token.toString());
+    const token = client.loadToken(JSON.stringify(authorToken.token));
     if (!token.expired()) {
       return {
         status: 'live',
@@ -58,12 +58,12 @@ const getOrRefreshToken = async (author: string): Promise<AuthorToken> => {
     };
     await setAuthorToken(author, refreshingAuthorToken);
     setImmediate(() => {
-      console.log('Refreshing expired token', token.token);
-      token.token.refresh()
+      console.log('getOrRefreshToken refreshing token');
+      token.refresh()
         .then((refreshedToken: AccessToken) => {
-          console.log('Refreshed token', refreshedToken.token);
+          console.log('getOrRefreshToken token refreshed', refreshedToken);
           setAuthorToken(author, {
-            token: refreshedToken,
+            token: refreshedToken.token,
             status: 'valid',
           });
         })
