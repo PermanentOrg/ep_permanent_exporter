@@ -7,6 +7,6 @@
       "es2018"
     ],
     "outDir": "static/js",
-    "sourceMap": true
+    "sourceMap": false
   }
 }
