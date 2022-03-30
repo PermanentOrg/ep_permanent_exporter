@@ -26,9 +26,6 @@ const debounceUpdate = debounce(async (pad: Pad): Promise<void> => {
         case 'missing':
           deleteSyncConfig(pad.id, credentials.author);
           return;
-        case 'refreshing':
-          // todo
-          return;
         case 'live':
           try {
             await uploadText(
@@ -39,8 +36,8 @@ const debounceUpdate = debounce(async (pad: Pad): Promise<void> => {
               `Text of ${pad.id} at revision ${pad.head}`,
               pad.atext.text,
             );
-          } catch (err: unknown) {
-            console.log('Error uploading text', credentials.author, pad.id, err);
+          } catch (err: any) {
+            console.log('Error uploading text', credentials.author, pad.id, typeof err, err);
           }
           return;
         default:

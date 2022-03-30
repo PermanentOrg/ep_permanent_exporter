@@ -11,7 +11,7 @@ import {
   setSyncConfig,
 } from '../database';
 import { getSyncTarget } from '../permanent-client';
-import { authorTokenIsLive, client, getOrRefreshToken } from '../permanent-oauth';
+import { authorTokenIsLive, client, getToken } from '../permanent-oauth';
 import { pluginSettings } from '../settings';
 import type {
   Handler,
@@ -24,7 +24,7 @@ const authorIsLoggedInToPermanent: Handler = async (
   res: Response,
 ): Promise<void> => {
   const author = await getAuthor4Token(req.cookies.token);
-  const { status } = await getOrRefreshToken(author);
+  const { status } = await getToken(author);
   switch(status) {
     case 'refreshing':
       res.json({ loginStatus: 'pending' });
@@ -33,7 +33,6 @@ const authorIsLoggedInToPermanent: Handler = async (
       res.json({ loginStatus: 'logged-out' });
       return;
     case 'live':
-    case 'valid':
       res.json({ loginStatus: 'logged-in' });
       return;
     default:
@@ -67,7 +66,7 @@ const enableSync: Handler = async (
   try {
     const author = await getAuthor4Token(req.cookies.token);
     const config = await getSyncConfig(req.params.pad, author);
-    const authorToken = await getOrRefreshToken(author);
+    const authorToken = await getToken(author);
 
     if (!authorTokenIsLive(authorToken)) {
       res.status(401).json({

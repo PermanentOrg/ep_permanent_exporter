@@ -6,6 +6,7 @@ import type { AccessToken } from 'simple-oauth2';
 import type {
   AuthorToken,
   AuthorTokenLive,
+  AuthorTokenMissing,
   AuthorTokenRefreshing,
   AuthorTokenValid,
 } from './database';
@@ -29,7 +30,79 @@ const authorTokenIsValid = (token: AuthorToken): token is AuthorTokenValid => (
   token.status === 'valid'
 );
 
-const getOrRefreshToken = async (author: string): Promise<AuthorToken> => {
+const refreshToken = async (
+  author: string,
+  expiredToken: AccessToken,
+): Promise<AuthorTokenMissing | AuthorTokenLive> => {
+  try {
+    await setAuthorToken(author, {
+      status: 'refreshing',
+      token: expiredToken.token,
+    });
+    const refreshedToken = await expiredToken.refresh();
+    setAuthorToken(author, {
+      token: refreshedToken.token,
+      status: 'valid',
+    });
+    return {
+      status: 'live',
+      token: refreshedToken,
+    };
+  } catch (err: unknown) {
+    console.log('Error while refreshing token for author', author, err);
+    deleteAuthorToken(author);
+    return {
+      status: 'missing',
+    };
+  }
+};
+
+const getOrRefreshToken = async (
+  author: string,
+): Promise<AuthorTokenMissing | AuthorTokenLive> => {
+  try {
+    const authorToken = await getAuthorToken(author);
+    if (authorToken.status === 'missing') {
+      return authorToken;
+    }
+
+    /* Ignore refreshing tokens; sometimes we're just gonna do some extra work.
+     * This complexity is caused by ueberdb2 reducing everything to a key-value
+     * store: ideally refreshing would start a database transaction, lock the
+     * row with the token for updating, refresh the token, and store the
+     * refreshed token or delete the expired refresh token; the "refreshing"
+     * state should never be persisted in the database. Instead, we have to
+     * roll our own transactions.
+     */
+
+    const token = client.loadToken(JSON.stringify(authorToken.token));
+    if (!token.expired()) {
+      return {
+        status: 'live',
+        token,
+      }
+    }
+    if (!('refresh_token' in token.token)) {
+      // token has expired and it is not a refresh token
+      await deleteAuthorToken(author);
+      return {
+        status: 'missing',
+      };
+    }
+
+    return refreshToken(author, token);
+  } catch (error: unknown) {
+    console.log('Error trying to determine if user is logged in to Permanent', typeof error, error);
+    return {
+      status: 'missing',
+    };
+  }
+};
+
+// quickly get a token, and queue a refresh in the background if needed
+const getToken = async (
+  author: string,
+): Promise<AuthorTokenMissing | AuthorTokenLive | AuthorTokenRefreshing> => {
   try {
     const authorToken = await getAuthorToken(author);
     if (!authorTokenIsValid(authorToken)) {
@@ -52,27 +125,13 @@ const getOrRefreshToken = async (author: string): Promise<AuthorToken> => {
     }
 
     // the token has expired, but we haven't tried to refresh it yet
-    const refreshingAuthorToken: AuthorTokenRefreshing = {
+    setImmediate(() => {
+      refreshToken(author, token);
+    });
+    return {
       status: 'refreshing',
       token: authorToken.token,
     };
-    await setAuthorToken(author, refreshingAuthorToken);
-    setImmediate(() => {
-      console.log('getOrRefreshToken refreshing token');
-      token.refresh()
-        .then((refreshedToken: AccessToken) => {
-          console.log('getOrRefreshToken token refreshed', refreshedToken);
-          setAuthorToken(author, {
-            token: refreshedToken.token,
-            status: 'valid',
-          });
-        })
-        .catch((err: unknown) => {
-          console.log('Error while refreshing token for author', author, err);
-          return deleteAuthorToken(author);
-        });
-    });
-    return refreshingAuthorToken;
   } catch (error: unknown) {
     console.log('Error trying to determine if user is logged in to Permanent', typeof error, error);
     return {
@@ -81,4 +140,4 @@ const getOrRefreshToken = async (author: string): Promise<AuthorToken> => {
   }
 };
 
-export { authorTokenIsLive, client, getOrRefreshToken };
+export { authorTokenIsLive, client, getToken, getOrRefreshToken };

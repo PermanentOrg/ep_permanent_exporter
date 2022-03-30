@@ -7,7 +7,7 @@ import {
 
 import type { AccessToken } from 'simple-oauth2';
 
-interface AuthorTokenMissing {
+export interface AuthorTokenMissing {
   status: 'missing';
 }
 
@@ -47,7 +47,7 @@ const setAuthorToken = async (
 
 const deleteAuthorToken = async (
   authorId: string,
-): Promise<SyncConfig> => (
+): Promise<null> => (
   remove(`permanent:${authorId}`)
 );
 
