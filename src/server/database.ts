@@ -5,6 +5,52 @@ import {
   set,
 } from 'ep_etherpad-lite/node/db/DB';
 
+import type { AccessToken } from 'simple-oauth2';
+
+export interface AuthorTokenMissing {
+  status: 'missing';
+}
+
+// this is necessary to prevent (or at least reduce?) race conditions
+export interface AuthorTokenRefreshing {
+  token: object;
+  status: 'refreshing';
+}
+
+export interface AuthorTokenValid {
+  token: object;
+  status: 'valid';
+}
+
+export interface AuthorTokenLive {
+  token: AccessToken;
+  status: 'live';
+}
+
+export type AuthorToken = AuthorTokenMissing | AuthorTokenRefreshing
+  | AuthorTokenValid | AuthorTokenLive;
+
+const getAuthorToken = async (
+  authorId: string,
+): Promise<AuthorTokenMissing | AuthorTokenRefreshing | AuthorTokenValid> => (
+  await get(`permanent:${authorId}`) || {
+    status: 'missing',
+  }
+);
+
+const setAuthorToken = async (
+  authorId: string,
+  authorToken: AuthorTokenRefreshing | AuthorTokenValid,
+): Promise<null> => (
+  set(`permanent:${authorId}`, authorToken)
+);
+
+const deleteAuthorToken = async (
+  authorId: string,
+): Promise<null> => (
+  remove(`permanent:${authorId}`)
+);
+
 interface SyncConfigDisabled {
   sync: false;
 }
@@ -12,27 +58,16 @@ interface SyncConfigDisabled {
 interface SyncConfigPending {
   sync: 'pending';
   credentials: {
-    type: 'cookies';
-    session: string;
-    mfa: string;
-  };
-}
-
-interface SyncConfigInvalid {
-  sync: 'invalid';
-  credentials: {
-    type: 'cookies';
-    session: string;
-    mfa: string;
+    type: 'author';
+    author: string;
   };
 }
 
 export interface SyncConfigEnabled {
   sync: true;
   credentials: {
-    type: 'cookies';
-    session: string;
-    mfa: string;
+    type: 'author';
+    author: string;
   };
   target: {
     archiveId: number;
@@ -44,7 +79,7 @@ export interface SyncConfigEnabled {
 }
 
 export type SyncConfig = SyncConfigDisabled | SyncConfigPending
-  | SyncConfigInvalid | SyncConfigEnabled;
+ | SyncConfigEnabled;
 
 const getSyncConfig = async (
   padId: string,
@@ -78,8 +113,11 @@ const deleteSyncConfig = async (
 );
 
 export {
+  deleteAuthorToken,
   deleteSyncConfig,
+  getAuthorToken,
   getSyncConfig,
   getSyncConfigs,
+  setAuthorToken,
   setSyncConfig,
 };

@@ -51,3 +51,15 @@ The plugin is composed of a few distinct pieces:
   on which Permanent Archive to store the pad in
 - The back-end needs to listen on an API for that information, and persist it
 - The back-end needs to wait for updates to a pad, and sync it to Permanent
+
+### Authentication
+
+The plugin uses OAuth to authenticate to Permanent.
+
+The OAuth Authorization Code Grant flow starts from the server, which can
+securely use the IdP-issued client credentials without exposing them to the
+user. The server requests a refresh token, which it can use to continue to sync
+a user's pads until the refresh token expires.
+
+The token is stored in the database, under the key `permanent:{authorId}`.
+Individual pads are configured u

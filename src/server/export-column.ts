@@ -5,7 +5,7 @@ const eejsBlock_exportColumn = (hookName: string, args: { content: string }) => 
   args.content += eejs.require(
     'ep_permanent_exporter/templates/exportColumn.html',
     {
-      loginUrl: pluginSettings.loginUrl,
+      loginUrl: '/permanent/auth',
     },
   );
 };

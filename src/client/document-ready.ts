@@ -32,21 +32,28 @@ const initializeMonetization = () => {
 
 const syncElements = [
   '#ep_permanent_exporter-log-in',
+  '#ep_permanent_exporter-log-in-pending',
   '#ep_permanent_exporter-sync-disabled',
   '#ep_permanent_exporter-sync-pending',
   '#ep_permanent_exporter-sync-enabled',
 ];
 
 const checkPermanentSyncStatus = async () => {
-  const { loggedInToPermanent, sync } = await $.getJSON(`${padUrl()}/permanent`);
+  const { loginStatus } = await $.getJSON('/permanent/status');
+  const { sync } = await $.getJSON(`${padUrl()}/permanent`);
 
-  if (sync === true) {
-    showOneOfGroup(syncElements, 'sync-enabled');
-  } else if (loggedInToPermanent && sync === 'pending') {
-    showOneOfGroup(syncElements, 'sync-pending');
+  if (loginStatus === 'logged-in') {
+    if (sync === true) {
+      showOneOfGroup(syncElements, 'sync-enabled');
+    } else if (sync === 'pending') {
+      showOneOfGroup(syncElements, 'sync-pending');
+      setTimeout(checkPermanentSyncStatus, 1000);
+    } else {
+      showOneOfGroup(syncElements, 'sync-disabled');
+    }
+  } else if (loginStatus === 'pending') {
+    showOneOfGroup(syncElements, 'log-in-pending');
     setTimeout(checkPermanentSyncStatus, 1000);
-  } else if (loggedInToPermanent) {
-    showOneOfGroup(syncElements, 'sync-disabled');
   } else {
     showOneOfGroup(syncElements, 'log-in');
   }

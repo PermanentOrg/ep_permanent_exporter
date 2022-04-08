@@ -4,25 +4,10 @@ import FormData from 'form-data';
 
 import { pluginSettings } from './settings';
 
-const { apiKey, baseUrl, padToken } = pluginSettings;
+import type { AuthorTokenLive } from './database';
+import type { AccessToken } from 'simple-oauth2';
 
-const createClient = async (
-  sessionToken: string,
-  mfaToken: string,
-  archiveId?: number,
-  archiveNbr?: string,
-): Promise<Permanent> => {
-  const permanent = new Permanent({
-    apiKey,
-    baseUrl,
-    mfaToken,
-    sessionToken,
-    archiveId,
-    archiveNbr,
-  });
-  await permanent.init();
-  return permanent;
-};
+const { baseUrl, padToken } = pluginSettings;
 
 const getOrCreateEtherpadFolder = async (permanent: Permanent) => {
   const appFolder = await permanent.folder.getAppFolder();
@@ -49,10 +34,13 @@ interface PermanentUploadTarget {
 }
 
 const getSyncTarget = async (
-  session: string,
-  mfa: string,
+  { token }: AuthorTokenLive,
 ): Promise<PermanentUploadTarget> => {
-  const permanent = await createClient(session, mfa);
+  const permanent = new Permanent({
+    accessToken: token,
+    baseUrl,
+  });
+  await permanent.init();
   const etherpadFolder = await getOrCreateEtherpadFolder(permanent);
   return {
     archiveId: permanent.getArchiveId() as number,
@@ -64,8 +52,7 @@ const getSyncTarget = async (
 };
 
 const uploadText = async (
-  session: string,
-  mfa: string,
+  accessToken: AccessToken,
   target: PermanentUploadTarget,
   displayName: string,
   filename: string,
@@ -81,7 +68,11 @@ const uploadText = async (
     uploadFileName: filename,
   };
 
-  const permanent = await createClient(session, mfa, target.archiveId, target.archiveNbr);
+  const permanent = new Permanent({
+    accessToken,
+    baseUrl,
+  });
+  await permanent.session.useArchive(target.archiveNbr);
   const { destinationUrl, presignedPost } = await permanent.record.getPresignedUrl('text/plain', record, padToken);
 
   const form = buildForm(presignedPost.fields, data);
