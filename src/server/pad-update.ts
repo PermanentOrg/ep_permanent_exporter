@@ -37,7 +37,8 @@ const debounceUpdate = debounce(async (pad: Pad): Promise<void> => {
               pad.atext.text,
             );
           } catch (err: any) {
-            console.log('Error uploading text', credentials.author, pad.id, typeof err, err);
+            console.log('Error uploading text', credentials.author, pad.id, typeof err,
+              err.stack || err.message || String(err));
           }
           return;
         default:
